@@ -66,7 +66,7 @@ const propertySchema = new mongoose.Schema({
         enum: [
             'wifi', 'parking', 'gym', 'pool', 'laundry', 
             'security', 'elevator', 'balcony', 'furnished',
-            'air_conditioning', 'heating', 'kitchen', 'garden'
+            'air_conditioning', 'heating', 'kitchen', 'garden', 'covered'
         ]
     }],
     specifications: {

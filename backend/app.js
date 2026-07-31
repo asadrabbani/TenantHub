@@ -21,11 +21,22 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Enable CORS for frontend integration
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://127.0.0.1:3000,http://localhost:3000')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: true,
-    credentials: true
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Origin is not allowed by CORS'));
+    },
+    credentials: true,
 }));
+
+app.get('/api/health', (req, res) => {
+    res.json({ success: true, service: 'TenantHub API', version: '2.0.0' });
+});
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -37,55 +48,12 @@ app.use('/api/reviews', reviews);
 app.use('/api/commute', commute);
 app.use('/api/bkash', bkash);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    
-    // Mongoose validation error
-    if (err.name === 'ValidationError') {
-        const message = Object.values(err.errors).map(val => val.message);
-        return res.status(400).json({
-            success: false,
-            message: message.join(', ')
-        });
-    }
-
-    // Mongoose duplicate key
-    if (err.code === 11000) {
-        return res.status(400).json({
-            success: false,
-            message: 'Duplicate field value entered'
-        });
-    }
-
-    // JWT errors
-    if (err.name === 'JsonWebTokenError') {
-        return res.status(401).json({
-            success: false,
-            message: 'Invalid token'
-        });
-    }
-
-    if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({
-            success: false,
-            message: 'Token expired'
-        });
-    }
-
-    res.status(err.statusCode || 500).json({
-        success: false,
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-});
-
 // Basic route for testing
 app.get('/', (req, res) => {
     res.json({
         success: true,
         message: 'Tenant Management System API is running!',
-        version: '1.0.0',
+        version: '2.0.0',
         endpoints: {
             auth: {
                 register: 'POST /api/auth/register',
@@ -150,21 +118,27 @@ app.get('/', (req, res) => {
     });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Something went wrong!',
-        error: process.env.NODE_ENV === 'production' ? {} : err.message
-    });
-});
-
 // Handle unmatched routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: `Route ${req.originalUrl} not found`
+    });
+});
+
+app.use((err, req, res, next) => {
+    const status = err.name === 'ValidationError' || err.code === 11000 ? 400
+        : err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError' ? 401
+        : err.message === 'Origin is not allowed by CORS' ? 403
+        : err.statusCode || 500;
+    const validationMessage = err.name === 'ValidationError'
+        ? Object.values(err.errors).map(value => value.message).join(', ')
+        : null;
+
+    if (status >= 500) console.error(err);
+    res.status(status).json({
+        success: false,
+        message: validationMessage || (err.code === 11000 ? 'A record with that value already exists' : err.message || 'Internal server error'),
     });
 });
 

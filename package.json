@@ -1,5 +1,16 @@
 {
-  "dependencies": {
-    "react-scripts": "^5.0.1"
+  "name": "tenanthub",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Rental discovery and management for academic communities",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:api": "npm --prefix backend run dev",
+    "dev:web": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test && npm --prefix frontend test"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

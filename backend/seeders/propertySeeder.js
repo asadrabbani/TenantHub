@@ -9,7 +9,8 @@ dotenv.config();
 // Connect to MongoDB
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+        if (mongoose.connection.readyState === 0) await mongoose.connect(uri);
         console.log('MongoDB Connected');
     } catch (error) {
         console.error('Database connection error:', error);
@@ -222,13 +223,13 @@ const seedProperties = async () => {
         await connectDB();
 
         // Find an owner user (or create one)
-        let owner = await User.findOne({ role: 'owner' });
+        let owner = await User.findOne({ email: 'owner@tenanthub.test' }) || await User.findOne({ role: 'owner' });
         if (!owner) {
             console.log('No owner found. Creating default owner...');
             owner = await User.create({
                 name: 'John Smith',
-                email: 'owner@example.com',
-                password: 'password123',
+                email: 'owner@tenanthub.test',
+                password: 'TenantHub123!',
                 role: 'owner',
                 phone: '+1234567890'
             });

@@ -13,16 +13,17 @@ connectDatabase().catch(err => {
 const PORT = process.env.PORT || 5001;
 
 const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    console.log(`📱 API Base URL: http://localhost:${PORT}`);
-    console.log(`📖 API Documentation: http://localhost:${PORT}`);
+    console.log(`TenantHub API listening on http://127.0.0.1:${PORT}`);
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-    console.log(`❌ Error: ${err.message}`);
-    // Close server & exit process
+process.on('unhandledRejection', (err) => {
+    console.error(`Unhandled rejection: ${err.message}`);
     server.close(() => {
         process.exit(1);
     });
 });
+
+for (const signal of ['SIGTERM', 'SIGINT']) {
+    process.on(signal, () => server.close(() => process.exit(0)));
+}

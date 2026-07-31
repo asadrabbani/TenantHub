@@ -7,8 +7,7 @@ const connectDatabase = async () => {
     // support either MONGODB_URI or MONGO_URI
     const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
     if (!uri) {
-      console.error('Missing MONGODB_URI/MONGO_URI in .env');
-      process.exit(1);
+      throw new Error('Missing MONGODB_URI or MONGO_URI');
     }
 
     const conn = await mongoose.connect(uri);
@@ -24,8 +23,7 @@ const connectDatabase = async () => {
 
     return conn;
   } catch (error) {
-    console.error('Database connection error:', error);
-    process.exit(1);
+    throw error;
   }
 };
 
