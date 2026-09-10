@@ -1,29 +1,33 @@
-const app = require('./app');
-const dotenv = require('dotenv');
-const connectDatabase = require('./config/database');
+const express = require("express");
+const cors = require("cors");
 
-dotenv.config();
+const app = express();
 
-// Connect to database
-connectDatabase().catch(err => {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1);
-});
+const allowedOrigins = [
+  "https://tenanthub-jas51nozj-la-fox.vercel.app",
+  "https://tenanthub-git-main-la-fox.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
 
-const PORT = process.env.PORT || 5001;
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} is not allowed by CORS`));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-const server = app.listen(PORT, () => {
-    console.log(`TenantHub API listening on http://127.0.0.1:${PORT}`);
-});
+app.use(express.json());
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-    console.error(`Unhandled rejection: ${err.message}`);
-    server.close(() => {
-        process.exit(1);
-    });
-});
+// YOUR ROUTES COME AFTER CORS
+app.use("/api/auth", authRoutes);
 
-for (const signal of ['SIGTERM', 'SIGINT']) {
-    process.on(signal, () => server.close(() => process.exit(0)));
-}
+app.listen(process.env.PORT || 5000);
