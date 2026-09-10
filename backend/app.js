@@ -21,18 +21,62 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://127.0.0.1:3000,http://localhost:3000')
-    .split(',')
-    .map(origin => origin.trim())
-    .filter(Boolean);
 
-app.use(cors({
-    origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('Origin is not allowed by CORS'));
+
+
+
+
+
+const allowedOrigins = [
+  "https://tenanthub-jas51nozj-la-fox.vercel.app",
+  "https://tenanthub-git-main-la-fox.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked CORS origin:", origin);
+
+      return callback(
+        new Error(`Origin is not allowed by CORS: ${origin}`)
+      );
     },
+
     credentials: true,
-}));
+
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+  })
+);
+
+
+
+
+
+
+
 
 app.get('/api/health', (req, res) => {
     res.json({ success: true, service: 'TenantHub API', version: '2.0.0' });
