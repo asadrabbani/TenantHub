@@ -28,6 +28,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 
 const allowedOrigins = [
+  "https://tenanthub-theta.vercel.app",
   "https://tenanthub-jas51nozj-la-fox.vercel.app",
   "https://tenanthub-git-main-la-fox.vercel.app",
   "http://localhost:3000",
